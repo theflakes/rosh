@@ -53,7 +53,7 @@ func parseFlags() (string, string, string, string, error) {
 	flag.Parse()
 
 	if (*ip == "" && *i == "") || (*port == "" && *p == "") {
-		return "", "", "", "", fmt.Errorf("usage: ollamacon --ip <IP> --port <Port> [--file <File>] [--model <Model>]")
+		return "", "", "", "", fmt.Errorf("usage: rosh --ip <IP> --port <Port> [--file <File>] [--model <Model>]")
 	}
 
 	usedIP := *ip
