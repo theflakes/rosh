@@ -3,8 +3,7 @@
 
 Mimick the local Ollama shell remotely.  
 
-##### <a href="https://aident.ai/blog/how-to-expose-ollama-service-api-to-network" target="_blank">Expose Ollama service API to network</a>
-
+##### [Expose Ollama service API to network](https://aident.ai/blog/how-to-expose-ollama-service-api-to-network) _(opens in a new tab)_
 ##### <a href="https://github.com/ollama/ollama/blob/main/docs/api.md" target="_blank">Ollama API</a>
 
 # Usage
