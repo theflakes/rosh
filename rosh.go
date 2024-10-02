@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/exec"
-	"strconv"
 	"strings"
 )
 
@@ -24,21 +22,6 @@ type Response struct {
 	CreatedAt string `json:"created_at"`
 	Response  string `json:"response"`
 	Done      bool   `json:"done"`
-}
-
-func getTerminalWidth() (int, error) {
-	cmd := exec.Command("tput", "cols")
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	output, err := cmd.Output()
-	if err != nil {
-		return 0, err
-	}
-	width, err := strconv.Atoi(strings.TrimSpace(string(output)))
-	if err != nil {
-		return 0, err
-	}
-	return width, nil
 }
 
 func openFile(filePath string) (*os.File, error) {
@@ -56,7 +39,7 @@ func sendRequest(address, prompt, model string) (*Response, error) {
 	request := Request{
 		Model:  model,
 		Prompt: prompt,
-		Stream: false,
+		Stream: true, // Enable streaming
 	}
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
@@ -69,41 +52,56 @@ func sendRequest(address, prompt, model string) (*Response, error) {
 	}
 	defer resp.Body.Close()
 
+	// Process the response stream
+	scanner := bufio.NewScanner(resp.Body)
 	var response Response
-	err = json.NewDecoder(resp.Body).Decode(&response)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	for scanner.Scan() {
+		line := scanner.Text()
+		var chunk Response
+		err := json.Unmarshal([]byte(line), &chunk)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response chunk: %v", err)
+		}
+		response.Response += chunk.Response
+		fmt.Print(chunk.Response) // Print each chunk's response as it is received
+
+		// Check if the response contains done:true
+		if chunk.Done {
+			response.Done = true
+			fmt.Printf("\n\n---\n\n")
+			break
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading response: %v", err)
 	}
 
 	return &response, nil
 }
 
-func printResponse(response *Response, line string) error {
-	fmt.Println(line)
-	fmt.Printf("[*] Model: %s\n", response.Model)
-	fmt.Printf("[*] Created At: %s\n", response.CreatedAt)
-	fmt.Printf("[*] Response: %s\n", response.Response)
-	fmt.Printf("[*] Done: %v\n", response.Done)
-	fmt.Println(line)
-	fmt.Println("")
-	return nil
-}
-
-func saveToFile(fileWriter *os.File, prompt string, response *Response, line string) error {
+func saveToFile(fileWriter *os.File, prompt string, response *Response) error {
 	if fileWriter != nil {
-		_, err := fileWriter.WriteString(fmt.Sprintf("Enter prompt: %s%s\n[*] Model: %s\n[*] Created At: %s\n[*] Response: %s\n[*] Done: %v\n%s\n\n",
+		_, err := fileWriter.WriteString(fmt.Sprintf("Enter prompt (end with two empty lines):\n%s---\n[*] Model: %s\n[*] Created At: %s\n[*] Response: %s\n[*] Done: %v\n---\n\n",
 			prompt,
-			line,
 			response.Model,
 			response.CreatedAt,
 			response.Response,
-			response.Done,
-			line))
+			response.Done))
 		if err != nil {
 			return fmt.Errorf("failed to write to file: %v", err)
 		}
 	}
 	return nil
+}
+
+func trimSpace(sb *strings.Builder) string {
+	result := strings.TrimRightFunc(sb.String(), func(r rune) bool {
+		return r == '\n' || r == '\r' || r == ' ' || r == '\t'
+	})
+	return strings.TrimLeftFunc(result, func(r rune) bool {
+		return r == ' ' || r == '\t'
+	})
 }
 
 func main() {
@@ -124,52 +122,35 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Print("Enter prompt: ")
-		prompt, _ := reader.ReadString('\n')
+		var prompt strings.Builder
+		fmt.Println("Enter prompt (end with two empty lines):")
 
-		response, err := sendRequest(address, strings.TrimSpace(prompt), model)
+		emptyLineCount := 0
+		for {
+			line, _ := reader.ReadString('\n')
+			if strings.TrimSpace(line) == "" {
+				emptyLineCount++
+				if emptyLineCount == 2 {
+					break
+				}
+			} else {
+				emptyLineCount = 0
+				prompt.WriteString(line)
+			}
+		}
+
+		response, err := sendRequest(address, trimSpace(&prompt), model)
 		if err != nil {
 			fmt.Println(err)
 			break
 		}
 
-		width, err := getTerminalWidth()
-		if err != nil {
-			fmt.Printf("failed to get terminal width: %v\n", err)
-		}
-
-		line := strings.Repeat("*", width)
-		err = printResponse(response, line)
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-
-		err = saveToFile(fileWriter, prompt, response, line)
+		err = saveToFile(fileWriter, prompt.String(), response)
 		if err != nil {
 			fmt.Println(err)
 			break
 		}
 	}
-}
-
-func printHelp() {
-	flag.Usage = func() {
-		fmt.Println(`Connect to Olamma API via console.`)
-		println("  Author: Brian Kellogg")
-		println("  License: MIT")
-		println()
-		println("Command line arguments:")
-		println("  --ip    : IP address of the server (default: 127.0.0.1)")
-		println("   -i     : IP address of the server (default: 127.0.0.1)")
-		println("  --port  : Port of the server (default: 11434)")
-		println("   -p     : Port of the server (default: 11434)")
-		println("  --file  : File to save queries and responses (default: \"\")")
-		println("   -f     : File to save queries and responses (default: \"\")")
-		println("  --model : Model to use (default: llama3.2)")
-		println("   -m     : Model to use (default: llama3.2)")
-	}
-	flag.Usage()
 }
 
 func parseFlags() (string, string, string, string, error) {
@@ -213,4 +194,23 @@ func parseFlags() (string, string, string, string, error) {
 
 	// No error to return, so returning nil for the error
 	return usedIP, usedPort, usedFile, usedModel, nil
+}
+
+func printHelp() {
+	flag.Usage = func() {
+		fmt.Println(`Connect to Olamma API via console.`)
+		println("  Author: Brian Kellogg")
+		println("  License: MIT")
+		println()
+		println("Command line arguments:")
+		println("  --ip    : IP address of the server (default: 127.0.0.1)")
+		println("   -i     : IP address of the server (default: 127.0.0.1)")
+		println("  --port  : Port of the server (default: 11434)")
+		println("   -p     : Port of the server (default: 11434)")
+		println("  --file  : File to save queries and responses (default: \"\")")
+		println("   -f     : File to save queries and responses (default: \"\")")
+		println("  --model : Model to use (default: llama3.2)")
+		println("   -m     : Model to use (default: llama3.2)")
+	}
+	flag.Usage()
 }
