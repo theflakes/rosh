@@ -1,8 +1,6 @@
 # rosh
 #### **R**emote **O**llama **SH**ell
-
 Mimick the local Ollama shell remotely.  
-
 ##### [Expose Ollama service API to network](https://aident.ai/blog/how-to-expose-ollama-service-api-to-network)
 ##### [Ollama API](https://github.com/ollama/ollama/blob/main/docs/api.md)
 # Usage
