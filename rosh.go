@@ -138,7 +138,11 @@ func main() {
 		emptyLineCount := 0
 		for {
 			line, _ := reader.ReadString('\n')
-			if strings.TrimSpace(line) == "" {
+			l := strings.TrimSpace(line)
+			if l == "/bye" {
+				os.Exit(0)
+			}
+			if l == "" {
 				emptyLineCount++
 				if emptyLineCount == 2 {
 					break
