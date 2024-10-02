@@ -192,7 +192,6 @@ func parseFlags() (string, string, string, string, error) {
 		usedModel = *m
 	}
 
-	// No error to return, so returning nil for the error
 	return usedIP, usedPort, usedFile, usedModel, nil
 }
 
