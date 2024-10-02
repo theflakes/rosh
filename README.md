@@ -12,6 +12,8 @@ Connect to Olamma API via console.
   Author: Brian Kellogg
   License: MIT
 
+To exit type -> /bye
+
 Command line arguments:
   --ip    : IP address of the server (default: 127.0.0.1)
    -i     : IP address of the server (default: 127.0.0.1)
