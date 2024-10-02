@@ -3,6 +3,9 @@ Remote shell for Ollama
 
 Mimick the local Ollama shell remotely.  
 
+Allow network connections to Ollama service:  
+https://aident.ai/blog/how-to-expose-ollama-service-api-to-network  
+
 Ollama API: https://github.com/ollama/ollama/blob/main/docs/api.md  
 
 # Usage

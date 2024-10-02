@@ -41,44 +41,6 @@ func getTerminalWidth() (int, error) {
 	return width, nil
 }
 
-func parseFlags() (string, string, string, string, error) {
-	ip := flag.String("ip", "", "IP address of the server")
-	i := flag.String("i", "", "IP address of the server (short)")
-	port := flag.String("port", "", "Port of the server")
-	p := flag.String("p", "", "Port of the server (short)")
-	file := flag.String("file", "", "File to save queries and responses")
-	f := flag.String("f", "", "File to save queries and responses (short)")
-	model := flag.String("model", "llama3.2", "Model to use")
-	m := flag.String("m", "llama3.2", "Model to use (short)")
-	flag.Parse()
-
-	if (*ip == "" && *i == "") || (*port == "" && *p == "") {
-		return "", "", "", "", fmt.Errorf("usage: rosh --ip <IP> --port <Port> [--file <File>] [--model <Model>]")
-	}
-
-	usedIP := *ip
-	if usedIP == "" {
-		usedIP = *i
-	}
-
-	usedPort := *port
-	if usedPort == "" {
-		usedPort = *p
-	}
-
-	usedFile := *file
-	if usedFile == "" {
-		usedFile = *f
-	}
-
-	usedModel := *model
-	if usedModel == "" {
-		usedModel = *m
-	}
-
-	return usedIP, usedPort, usedFile, usedModel, nil
-}
-
 func openFile(filePath string) (*os.File, error) {
 	if filePath == "" {
 		return nil, nil
@@ -189,4 +151,66 @@ func main() {
 			break
 		}
 	}
+}
+
+func printHelp() {
+	flag.Usage = func() {
+		fmt.Println(`Connect to Olamma API via console.`)
+		println("  Author: Brian Kellogg")
+		println("  License: MIT")
+		println()
+		println("Command line arguments:")
+		println("  --ip    : IP address of the server (default: 127.0.0.1)")
+		println("   -i     : IP address of the server (default: 127.0.0.1)")
+		println("  --port  : Port of the server (default: 11434)")
+		println("   -p     : Port of the server (default: 11434)")
+		println("  --file  : File to save queries and responses (default: \"\")")
+		println("   -f     : File to save queries and responses (default: \"\")")
+		println("  --model : Model to use (default: llama3.2)")
+		println("   -m     : Model to use (default: llama3.2)")
+	}
+	flag.Usage()
+}
+
+func parseFlags() (string, string, string, string, error) {
+	help := flag.Bool("help", false, "Print this help message")
+	h := flag.Bool("h", false, "Print this help message (short)")
+	ip := flag.String("ip", "127.0.0.1", "IP address of the server")
+	i := flag.String("i", "127.0.0.1", "IP address of the server (short)")
+	port := flag.String("port", "11434", "Port of the server")
+	p := flag.String("p", "11434", "Port of the server (short)")
+	file := flag.String("file", "", "File to save queries and responses")
+	f := flag.String("f", "", "File to save queries and responses (short)")
+	model := flag.String("model", "llama3.2", "Model to use")
+	m := flag.String("m", "llama3.2", "Model to use (short)")
+
+	flag.Parse()
+
+	if *help || *h {
+		printHelp()
+		os.Exit(0)
+	}
+
+	usedIP := *ip
+	if *ip == "127.0.0.1" {
+		usedIP = *i
+	}
+
+	usedPort := *port
+	if *port == "11434" {
+		usedPort = *p
+	}
+
+	usedFile := *file
+	if *file == "" {
+		usedFile = *f
+	}
+
+	usedModel := *model
+	if *model == "llama3.2" {
+		usedModel = *m
+	}
+
+	// No error to return, so returning nil for the error
+	return usedIP, usedPort, usedFile, usedModel, nil
 }
