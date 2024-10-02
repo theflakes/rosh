@@ -3,9 +3,8 @@
 
 Mimick the local Ollama shell remotely.  
 
-##### [Expose Ollama service API to network](https://aident.ai/blog/how-to-expose-ollama-service-api-to-network) _(opens in a new tab)_
-##### <a href="https://github.com/ollama/ollama/blob/main/docs/api.md" target="_blank">Ollama API</a>
-
+##### [Expose Ollama service API to network](https://aident.ai/blog/how-to-expose-ollama-service-api-to-network)
+##### [Ollama API](https://github.com/ollama/ollama/blob/main/docs/api.md)
 # Usage
 If `--file` is specified all console output is recorded to the specified file as well. The file is forever appended to.  
 ```
