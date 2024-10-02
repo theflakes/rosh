@@ -159,11 +159,6 @@ func main() {
 	}
 	defer fileWriter.Close()
 
-	width, err := getTerminalWidth()
-	if err != nil {
-		fmt.Printf("failed to get terminal width: %v\n", err)
-	}
-
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -174,6 +169,11 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 			break
+		}
+
+		width, err := getTerminalWidth()
+		if err != nil {
+			fmt.Printf("failed to get terminal width: %v\n", err)
 		}
 
 		line := strings.Repeat("*", width)
