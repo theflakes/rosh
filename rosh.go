@@ -52,9 +52,14 @@ func sendRequest(address, prompt, model string) (*Response, error) {
 	}
 	defer resp.Body.Close()
 
-	// Process the response stream
+	return processResponseStream(resp)
+}
+
+func processResponseStream(resp *http.Response) (*Response, error) {
 	scanner := bufio.NewScanner(resp.Body)
 	var response Response
+	firstResponseReceived := false
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		var chunk Response
@@ -65,7 +70,12 @@ func sendRequest(address, prompt, model string) (*Response, error) {
 		response.Response += chunk.Response
 		fmt.Print(chunk.Response) // Print each chunk's response as it is received
 
-		// Check if the response contains done:true
+		if !firstResponseReceived {
+			response.Model = chunk.Model
+			response.CreatedAt = chunk.CreatedAt
+			firstResponseReceived = true
+		}
+
 		if chunk.Done {
 			response.Done = true
 			fmt.Printf("\n\n---\n\n")
