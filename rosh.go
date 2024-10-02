@@ -215,6 +215,8 @@ func printHelp() {
 		println("  Author: Brian Kellogg")
 		println("  License: MIT")
 		println()
+		println("To exit type -> /bye")
+		println()
 		println("Command line arguments:")
 		println("  --ip    : IP address of the server (default: 127.0.0.1)")
 		println("   -i     : IP address of the server (default: 127.0.0.1)")
