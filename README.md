@@ -1,5 +1,5 @@
 # rosh
-Remote shell for Ollama
+#### Remote Ollama Shell
 
 Mimick the local Ollama shell remotely.  
 
