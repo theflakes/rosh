@@ -92,12 +92,20 @@ func processResponseStream(resp *http.Response) (*Response, error) {
 
 func saveToFile(fileWriter *os.File, prompt string, response *Response) error {
 	if fileWriter != nil {
-		_, err := fileWriter.WriteString(fmt.Sprintf("Enter prompt (end with two empty lines):\n%s---\n[*] Model: %s\n[*] Created At: %s\n[*] Response: %s\n[*] Done: %v\n---\n\n",
+		_, err := fileWriter.WriteString(fmt.Sprintf(`Enter prompt (end with two empty lines):
+%s---
+[*] Model: %s
+[*] Created At: %s
+[*] Response: %s
+[*] Done: %v
+---
+`,
 			prompt,
 			response.Model,
 			response.CreatedAt,
 			response.Response,
-			response.Done))
+			response.Done,
+		))
 		if err != nil {
 			return fmt.Errorf("failed to write to file: %v", err)
 		}
